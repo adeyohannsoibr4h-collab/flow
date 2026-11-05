@@ -213,7 +213,7 @@ textarea{
 .gear svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 dialog{border:1.5px solid var(--line);border-radius:24px;background:var(--white);color:var(--forest);padding:0;width:min(480px,92vw);max-height:90vh;margin:auto;box-shadow:0 40px 80px -30px rgba(0,0,0,.45)}
 dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
-.dlg{padding:22px 24px 26px;overflow-y:auto;max-height:90vh}
+.dlg{display:block;padding:22px 24px 26px;overflow-y:auto;max-height:90vh;min-height:220px}\n#settings[open]{display:block}\n#settings .sec{display:block;visibility:visible;opacity:1}
 .dlg-head{display:flex;justify-content:space-between;align-items:center}
 .dlg-head h2{font-size:22px}
 .x{border:none;background:var(--mint-100);color:var(--forest);width:36px;height:36px;border-radius:12px;font-size:20px;cursor:pointer}
@@ -291,6 +291,11 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
   *{animation:none!important;transition:none!important}
 }
 </style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+
 </head>
 <body>
 
@@ -388,9 +393,34 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
         <button class="logout" id="logoutBtn" type="button">Déconnexion</button>
       </div>
     </section>
-    <section class="sec"><h3>Thème</h3><div class="seg" id="themeSeg"></div></section>
-    <section class="sec"><h3>Couleur</h3><div class="swatches" id="swatches"></div></section>
-    <section class="sec"><h3>Comment FlowAI t’explique</h3><div class="styles" id="styles"></div></section>
+    <section class="sec">
+      <h3>Thème</h3>
+      <div class="seg" id="themeSeg">
+        <button type="button" data-pref="theme" data-value="light" aria-pressed="false">Clair</button>
+        <button type="button" data-pref="theme" data-value="dark" aria-pressed="false">Sombre</button>
+        <button type="button" data-pref="theme" data-value="auto" aria-pressed="false">Auto</button>
+      </div>
+    </section>
+    <section class="sec">
+      <h3>Couleur</h3>
+      <div class="swatches" id="swatches">
+        <button type="button" class="sw" data-pref="accent" data-value="menthe" aria-pressed="false" aria-label="Menthe"><i style="background:hsl(155 52% 51%)"></i>Menthe</button>
+        <button type="button" class="sw" data-pref="accent" data-value="ocean" aria-pressed="false" aria-label="Océan"><i style="background:hsl(205 52% 51%)"></i>Océan</button>
+        <button type="button" class="sw" data-pref="accent" data-value="lavande" aria-pressed="false" aria-label="Lavande"><i style="background:hsl(265 52% 51%)"></i>Lavande</button>
+        <button type="button" class="sw" data-pref="accent" data-value="rose" aria-pressed="false" aria-label="Rose"><i style="background:hsl(335 52% 51%)"></i>Rose</button>
+        <button type="button" class="sw" data-pref="accent" data-value="corail" aria-pressed="false" aria-label="Corail"><i style="background:hsl(15 52% 51%)"></i>Corail</button>
+      </div>
+    </section>
+    <section class="sec">
+      <h3>Comment FlowAI t’explique</h3>
+      <div class="styles" id="styles">
+        <button type="button" class="st" data-pref="style" data-value="equilibre" aria-pressed="false"><b>Équilibré</b><span>Des explications claires, ni trop courtes ni trop longues.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="simple" aria-pressed="false"><b>Court et simple</b><span>L’essentiel en quelques phrases.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="pas_a_pas" aria-pressed="false"><b>Pas à pas</b><span>Chaque étape détaillée, comme en cours.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="exemples" aria-pressed="false"><b>Avec des exemples</b><span>Beaucoup d’exemples concrets.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="guide" aria-pressed="false"><b>Me guider</b><span>Des indices et des questions, sans donner tout de suite la réponse.</span></button>
+      </div>
+    </section>
   </div>
 </dialog>
 
@@ -437,16 +467,14 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script>
 /* ========== CONFIG FIREBASE (connexion Google / Apple / e-mail) ==========
-
-   constfirebaseConfig = {
-    apiKey: "AIzaSyDK7BKDU4x2IlN47scTXIsly_GN3VtyfA0",
-    authDomain: "flowai-45bd5.firebaseapp.com",
-    projectId: "flowai-45bd5",
-    storageBucket: "flowai-45bd5.firebasestorage.app",
-    messagingSenderId: "1069456413012",
-    appId: "1:1069456413012:web:6fd0417674635beb4238c1",
-    measurementId: "G-2EL5XSQRT4"
-  };
+   Colle ici le bloc "firebaseConfig" de ta console Firebase.
+   Tant que apiKey commence par "VOTRE", la connexion est désactivée et le site reste ouvert. */
+const FIREBASE_CONFIG = {
+  apiKey: "VOTRE_API_KEY",
+  authDomain: "VOTRE_PROJET.firebaseapp.com",
+  projectId: "VOTRE_PROJET",
+  appId: "VOTRE_APP_ID"
+};
 const AUTH_ENABLED = typeof firebase !== "undefined" && !FIREBASE_CONFIG.apiKey.startsWith("VOTRE");
 
 /* ========== DONNÉES ========== */
@@ -532,6 +560,25 @@ function addMsg(role, text, extra, imgs){
     d.appendChild(row);
   }
   if (text) d.appendChild(document.createTextNode(text));
+
+  // Affiche les expressions LaTeX comme de vraies formules mathématiques.
+  if (text && window.renderMathInElement) {
+    try {
+      renderMathInElement(d, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false }
+        ],
+        throwOnError: false,
+        strict: "ignore",
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      });
+    } catch (error) {
+      console.warn("Rendu mathématique indisponible :", error);
+    }
+  }
+
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
   return d;
@@ -1029,35 +1076,45 @@ function applyPrefs(){
 darkQuery.addEventListener("change", () => { if (prefs.theme === "auto") applyPrefs(); });
 
 function renderSettings(){
-  const seg = $("themeSeg"); seg.innerHTML = "";
-  THEMES.forEach(([id, label]) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.textContent = label; b.setAttribute("aria-pressed", prefs.theme === id);
-    b.onclick = () => { prefs.theme = id; applyPrefs(); };
-    seg.appendChild(b);
-  });
-  const sw = $("swatches"); sw.innerHTML = "";
-  ACCENTS.forEach(([id, label]) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "sw"; b.setAttribute("aria-pressed", prefs.accent === id);
-    b.setAttribute("aria-label", label);
-    b.innerHTML = '<i style="background:hsl(' + HUES[id] + ' 52% 51%)"></i>' + label;
-    b.onclick = () => { prefs.accent = id; applyPrefs(); };
-    sw.appendChild(b);
-  });
-  const st = $("styles"); st.innerHTML = "";
-  STYLES.forEach(([id, label, desc]) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "st"; b.setAttribute("aria-pressed", prefs.style === id);
-    b.innerHTML = "<b></b><span></span>";
-    b.firstChild.textContent = label; b.lastChild.textContent = desc;
-    b.onclick = () => { prefs.style = id; applyPrefs(); };
-    st.appendChild(b);
+  // Les options existent directement dans le HTML : elles restent visibles
+  // même si le navigateur interrompt ou retarde l'initialisation JavaScript.
+  document.querySelectorAll("#settings [data-pref]").forEach(button => {
+    const key = button.dataset.pref;
+    button.setAttribute("aria-pressed", String(prefs[key] === button.dataset.value));
   });
 }
-$("gearBtn").onclick = () => $("settings").showModal();
-$("closeSettings").onclick = () => $("settings").close();
-$("settings").addEventListener("click", e => { if (e.target === $("settings")) $("settings").close(); });
+$("settings").addEventListener("click", e => {
+  const button = e.target.closest("[data-pref]");
+  if (!button || !$("settings").contains(button)) return;
+  const key = button.dataset.pref;
+  if (!["theme", "accent", "style"].includes(key)) return;
+  prefs[key] = button.dataset.value;
+  applyPrefs();
+});
+// Ouvre les paramètres après avoir reconstruit les options.
+ // Cela évite une fenêtre vide si le navigateur a interrompu le rendu initial.
+$("gearBtn").onclick = () => {
+  const dialog = $("settings");
+  renderSettings();
+  if (typeof dialog.showModal === "function") {
+    if (!dialog.open) dialog.showModal();
+  } else {
+    // Repli pour les navigateurs qui ne prennent pas en charge <dialog>.
+    dialog.setAttribute("open", "");
+  }
+};
+$("closeSettings").onclick = () => {
+  const dialog = $("settings");
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+};
+$("settings").addEventListener("click", e => {
+  if (e.target === $("settings")) {
+    const dialog = $("settings");
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  }
+});
 
 /* ========== CONNEXION (Google, Apple, e-mail) ========== */
 const AUTH_MSG = {
