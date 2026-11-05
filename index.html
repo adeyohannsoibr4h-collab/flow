@@ -437,14 +437,16 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script>
 /* ========== CONFIG FIREBASE (connexion Google / Apple / e-mail) ==========
-   Colle ici le bloc "firebaseConfig" de ta console Firebase.
-   Tant que apiKey commence par "VOTRE", la connexion est désactivée et le site reste ouvert. */
-const FIREBASE_CONFIG = {
-  apiKey: "VOTRE_API_KEY",
-  authDomain: "VOTRE_PROJET.firebaseapp.com",
-  projectId: "VOTRE_PROJET",
-  appId: "VOTRE_APP_ID"
-};
+
+   constfirebaseConfig = {
+    apiKey: "AIzaSyDK7BKDU4x2IlN47scTXIsly_GN3VtyfA0",
+    authDomain: "flowai-45bd5.firebaseapp.com",
+    projectId: "flowai-45bd5",
+    storageBucket: "flowai-45bd5.firebasestorage.app",
+    messagingSenderId: "1069456413012",
+    appId: "1:1069456413012:web:6fd0417674635beb4238c1",
+    measurementId: "G-2EL5XSQRT4"
+  };
 const AUTH_ENABLED = typeof firebase !== "undefined" && !FIREBASE_CONFIG.apiKey.startsWith("VOTRE");
 
 /* ========== DONNÉES ========== */
