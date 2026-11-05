@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FlowAI – L’assistant scolaire qui t’explique</title>
+<title>Flow – L’assistant scolaire qui t’explique</title>
 <script>try{var P=JSON.parse(localStorage.getItem("flowai_prefs"))||{},T=P.theme||"auto";if(T==="auto")T=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=T;document.documentElement.style.setProperty("--h",({menthe:155,ocean:205,lavande:265,rose:335,corail:15})[P.accent]||155)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -495,7 +495,7 @@ const SUBJECTS = [
 
 function welcome(){
   const first = user && user.displayName ? " " + user.displayName.split(" ")[0] : "";
-  return "👋 Bonjour" + first + ", je suis FlowAI. Choisis une matière puis pose-moi ta question : je t’explique pas à pas.";
+  return "👋 Bonjour" + first + ", je suis Flow. Choisis une matière puis pose-moi ta question : je t’explique pas à pas.";
 }
 
 /* ========== ÉTAT ========== */
