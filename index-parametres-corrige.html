@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlowAI – L’assistant scolaire qui t’explique</title>
+<script>try{var P=JSON.parse(localStorage.getItem("flowai_prefs"))||{},T=P.theme||"auto";if(T==="auto")T=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=T;document.documentElement.style.setProperty("--h",({menthe:155,ocean:205,lavande:265,rose:335,corail:15})[P.accent]||155)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --h:155;
+  --mint-50:hsl(var(--h) 60% 96%);
+  --mint-100:hsl(var(--h) 55% 91%);
+  --mint-300:hsl(var(--h) 60% 77%);
+  --mint-500:hsl(var(--h) 52% 51%);
+  --mint-700:hsl(var(--h) 75% 31%);
+  --forest:hsl(var(--h) 65% 14%);
+  --ink-soft:hsl(var(--h) 18% 33%);
+  --line:hsl(var(--h) 45% 87%);
+  --white:#fff;
+  --strong:hsl(var(--h) 65% 14%);
+  --on-strong:#fff;
+  --ink-on-accent:hsl(var(--h) 65% 12%);
+  --logo-bg:hsl(var(--h) 65% 14%);
+  --danger:#9a3b2e;
+  --radius:20px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --mint-50:hsl(var(--h) 30% 7%);
+  --mint-100:hsl(var(--h) 28% 16%);
+  --mint-300:hsl(var(--h) 55% 68%);
+  --mint-500:hsl(var(--h) 52% 54%);
+  --mint-700:hsl(var(--h) 55% 64%);
+  --forest:hsl(var(--h) 40% 93%);
+  --ink-soft:hsl(var(--h) 14% 68%);
+  --line:hsl(var(--h) 22% 21%);
+  --white:hsl(var(--h) 24% 11%);
+  --strong:hsl(var(--h) 52% 54%);
+  --on-strong:hsl(var(--h) 65% 10%);
+  --logo-bg:hsl(var(--h) 40% 22%);
+  --danger:#ff9d8f;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--mint-50);
+  color:var(--forest);
+  min-height:100vh;
+  line-height:1.6;
+}
+h1,h2,h3,.brand{font-family:'Bricolage Grotesque','DM Sans',sans-serif}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--mint-700);outline-offset:2px}
+
+/* NAV */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:18px clamp(16px,4vw,48px);
+  flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:10px;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.brand svg{width:40px;height:40px}
+.selects{display:flex;gap:10px;flex-wrap:wrap}
+.selects label{display:flex;flex-direction:column;font-size:12px;color:var(--ink-soft);gap:2px}
+select{
+  background:var(--white);border:1.5px solid var(--line);border-radius:12px;
+  padding:9px 12px;cursor:pointer;font-weight:500;min-width:150px;
+}
+select:hover{border-color:var(--mint-500)}
+
+/* LAYOUT */
+.wrap{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+  gap:clamp(20px,3vw,48px);
+  padding:10px clamp(16px,4vw,48px) 48px;
+  align-items:start;
+}
+
+/* HERO */
+.hero h1{
+  font-size:clamp(34px,4.6vw,58px);
+  line-height:1.05;letter-spacing:-.03em;font-weight:800;
+  max-width:14ch;
+}
+.hero p.lead{margin-top:16px;color:var(--ink-soft);font-size:18px;max-width:46ch}
+.subjects-title{margin-top:32px;font-size:15px;font-weight:600;color:var(--ink-soft)}
+.subjects{
+  margin-top:12px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+.subject{
+  --tilt:-4deg;
+  background:var(--white);border:1.5px solid var(--line);border-radius:var(--radius);
+  padding:16px 8px 14px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  font-weight:600;font-size:14px;
+  transition:transform .25s cubic-bezier(.3,1.6,.5,1),background .2s,border-color .2s,box-shadow .2s;
+}
+.subject:nth-child(even){--tilt:4deg}
+.subject .ico{
+  width:54px;height:54px;border-radius:16px;
+  background:var(--mint-100);color:var(--mint-700);
+  display:grid;place-items:center;
+  transition:transform .3s cubic-bezier(.3,1.6,.5,1),background .2s,color .2s;
+}
+.subject .ico svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.subject:hover{transform:translateY(-4px);border-color:var(--mint-500);box-shadow:0 10px 24px -12px rgba(23,145,106,.55)}
+.subject:hover .ico{transform:rotate(var(--tilt)) scale(1.12)}
+.subject:active{transform:scale(.96)}
+.subject[aria-pressed="true"]{background:var(--strong);border-color:var(--strong);color:var(--on-strong)}
+.subject[aria-pressed="true"] .ico{background:var(--mint-300);color:var(--ink-on-accent);transform:rotate(var(--tilt)) scale(1.08)}
+
+/* CHAT CARD */
+.app{
+  background:var(--white);border:1.5px solid var(--line);border-radius:28px;
+  display:grid;grid-template-columns:200px minmax(0,1fr);
+  height:min(78vh,720px);min-height:520px;overflow:hidden;
+  box-shadow:0 30px 60px -40px rgba(13,59,46,.45);
+}
+.side{
+  background:var(--mint-50);border-right:1.5px solid var(--line);
+  padding:14px;display:flex;flex-direction:column;gap:12px;min-height:0;
+}
+.new-chat{
+  background:var(--strong);color:var(--on-strong);border:none;border-radius:14px;
+  padding:12px;font-weight:600;cursor:pointer;transition:background .2s;
+}
+.new-chat:hover{background:var(--mint-700)}
+.history{display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0}
+.history button{
+  text-align:left;background:transparent;border:none;border-radius:10px;
+  padding:9px 10px;font-size:13.5px;color:var(--ink-soft);cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.history button:hover{background:var(--mint-100)}
+.history button.on{background:var(--mint-100);color:var(--forest);font-weight:600}
+.history .empty{font-size:13px;color:var(--ink-soft);padding:6px 10px}
+
+.panel{display:flex;flex-direction:column;min-width:0;min-height:0}
+.panel-head{
+  padding:14px 20px;border-bottom:1.5px solid var(--line);
+  display:flex;align-items:center;gap:10px;font-weight:600;
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mint-500);box-shadow:0 0 0 4px var(--mint-100)}
+.ctx{margin-left:auto;font-size:13px;font-weight:500;color:var(--mint-700);background:var(--mint-100);padding:4px 10px;border-radius:99px}
+
+.chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.msg{
+  max-width:86%;padding:12px 16px;border-radius:18px;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.msg.ai{align-self:flex-start;background:var(--mint-100);border-bottom-left-radius:6px}
+.msg.user{align-self:flex-end;background:var(--strong);color:var(--on-strong);border-bottom-right-radius:6px}
+.msg.typing{color:var(--ink-soft)}
+.msg.typing::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 20px 8px}
+.chips button{
+  background:var(--white);border:1.5px solid var(--line);border-radius:99px;
+  padding:6px 12px;font-size:13px;cursor:pointer;transition:all .15s;
+}
+.chips button:hover{border-color:var(--mint-500);background:var(--mint-50)}
+
+.composer{padding:12px 16px 16px;border-top:1.5px solid var(--line)}
+.box{
+  display:flex;gap:10px;align-items:flex-end;
+  background:var(--mint-50);border:1.5px solid var(--line);border-radius:18px;padding:8px 8px 8px 14px;
+}
+.box:focus-within{border-color:var(--mint-500);background:var(--white)}
+textarea{
+  flex:1;background:transparent;border:none;outline:none;resize:none;
+  min-height:28px;max-height:140px;padding:6px 0;font-size:16px;
+}
+.send{
+  width:44px;height:44px;border:none;border-radius:14px;cursor:pointer;
+  background:var(--mint-500);color:var(--ink-on-accent);display:grid;place-items:center;
+  transition:transform .2s cubic-bezier(.3,1.6,.5,1),background .2s;
+}
+.send:hover{background:var(--mint-300);transform:scale(1.07) rotate(-8deg)}
+.send:disabled{opacity:.5;cursor:wait;transform:none}
+.send svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* PIÈCES JOINTES */
+.previews{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.previews:empty{display:none}
+.chip{display:flex;align-items:center;gap:8px;background:var(--mint-100);border-radius:12px;padding:4px 6px 4px 4px;font-size:13px;max-width:210px}
+.chip img{width:36px;height:36px;object-fit:cover;border-radius:8px}
+.chip .fi{width:36px;height:36px;flex:none;border-radius:8px;background:var(--white);display:grid;place-items:center;color:var(--mint-700)}
+.chip .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{border:none;background:transparent;cursor:pointer;font-size:16px;line-height:1;padding:4px 6px;color:var(--ink-soft);border-radius:8px}
+.chip button:hover{background:var(--white);color:var(--forest)}
+.box{padding-left:8px}
+.attach{width:44px;height:44px;flex:none;border:none;border-radius:14px;background:transparent;color:var(--mint-700);cursor:pointer;display:grid;place-items:center;transition:transform .2s cubic-bezier(.3,1.6,.5,1),background .2s}
+.attach:hover{background:var(--mint-100);transform:rotate(-12deg) scale(1.08)}
+.attach svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.note{font-size:13px;color:var(--danger);margin-bottom:6px}
+.note:empty{display:none}
+.thumbs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.thumbs img{max-width:160px;max-height:140px;border-radius:12px;object-fit:cover}
+.app.drag{outline:3px dashed var(--mint-500);outline-offset:-8px}
+
+/* PARAMÈTRES + CONNEXION */
+.selects{align-items:flex-end}
+.gear{width:42px;height:42px;flex:none;border:1.5px solid var(--line);background:var(--white);border-radius:12px;cursor:pointer;display:grid;place-items:center;color:var(--mint-700);transition:transform .25s cubic-bezier(.3,1.6,.5,1),border-color .2s}
+.gear:hover{transform:rotate(60deg);border-color:var(--mint-500)}
+.gear svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+dialog{border:1.5px solid var(--line);border-radius:24px;background:var(--white);color:var(--forest);padding:0;width:min(480px,92vw);max-height:90vh;margin:auto;box-shadow:0 40px 80px -30px rgba(0,0,0,.45)}
+dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
+.dlg{display:block;padding:22px 24px 26px;overflow-y:auto;max-height:90vh;min-height:220px}\n#settings[open]{display:block}\n#settings .sec{display:block;visibility:visible;opacity:1}
+.dlg-head{display:flex;justify-content:space-between;align-items:center}
+.dlg-head h2{font-size:22px}
+.x{border:none;background:var(--mint-100);color:var(--forest);width:36px;height:36px;border-radius:12px;font-size:20px;cursor:pointer}
+.sec{margin-top:20px}
+.sec h3{font-size:14px;color:var(--ink-soft);font-weight:600;margin-bottom:10px;font-family:'DM Sans',sans-serif}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--mint-100);padding:5px;border-radius:14px}
+.seg button{border:none;background:transparent;padding:9px;border-radius:10px;cursor:pointer;font-weight:600;color:var(--ink-soft)}
+.seg button[aria-pressed="true"]{background:var(--white);color:var(--forest);box-shadow:0 2px 8px -3px rgba(0,0,0,.35)}
+.swatches{display:flex;gap:14px;flex-wrap:wrap}
+.sw{display:flex;flex-direction:column;align-items:center;gap:6px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--ink-soft)}
+.sw i{width:40px;height:40px;border-radius:50%;display:block;border:3px solid var(--white);box-shadow:0 0 0 2px var(--line);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.sw:hover i{transform:scale(1.12)}
+.sw[aria-pressed="true"] i{box-shadow:0 0 0 3px var(--forest)}
+.styles{display:flex;flex-direction:column;gap:8px}
+.st{text-align:left;border:1.5px solid var(--line);background:var(--white);border-radius:14px;padding:10px 14px;cursor:pointer;color:var(--forest)}
+.st b{display:block;font-size:15px}
+.st span{font-size:13px;color:var(--ink-soft)}
+.st:hover{border-color:var(--mint-500)}
+.st[aria-pressed="true"]{border-color:var(--mint-500);background:var(--mint-100)}
+.acct{display:flex;align-items:center;gap:12px;background:var(--mint-100);border-radius:16px;padding:12px}
+.avatar{width:44px;height:44px;flex:none;border-radius:50%;object-fit:cover;background:var(--mint-500);color:var(--ink-on-accent);display:grid;place-items:center;font-weight:700}
+.acct .who{flex:1;min-width:0}
+.acct .who b,.acct .who small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .who small{color:var(--ink-soft)}
+.logout{border:1.5px solid var(--line);background:var(--white);color:var(--forest);border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600}
+.logout:hover{border-color:var(--mint-500)}
+.gate{position:fixed;inset:0;z-index:50;background:var(--mint-50);display:grid;place-items:center;padding:20px;overflow-y:auto}
+.gate.pending .gcard{visibility:hidden}
+.gcard{width:min(420px,100%);background:var(--white);border:1.5px solid var(--line);border-radius:28px;padding:30px 28px;box-shadow:0 30px 60px -40px rgba(0,0,0,.5)}
+.gcard .brand{justify-content:center;margin-bottom:6px}
+.gcard h2{text-align:center;font-size:24px}
+.gcard .sub{text-align:center;color:var(--ink-soft);margin:6px 0 20px}
+.social{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;border:1.5px solid var(--line);background:var(--white);color:var(--forest);border-radius:14px;padding:12px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:border-color .2s,transform .15s}
+.social:hover{border-color:var(--mint-500);transform:translateY(-1px)}
+.social svg{width:22px;height:22px}
+.or{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:13px;margin:14px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.gcard input{width:100%;border:1.5px solid var(--line);background:var(--mint-50);color:var(--forest);border-radius:12px;padding:11px 14px;font-size:16px;margin-bottom:10px;outline:none}
+.gcard input:focus{border-color:var(--mint-500);background:var(--white)}
+.primary{width:100%;border:none;border-radius:14px;padding:13px;background:var(--strong);color:var(--on-strong);font-weight:600;cursor:pointer}
+.primary:hover{background:var(--mint-700)}
+.links{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-size:14px}
+.links button{border:none;background:none;color:var(--mint-700);cursor:pointer;font-weight:600;text-decoration:underline}
+.autherr{color:var(--danger);font-size:14px;min-height:20px;margin-top:10px;text-align:center}
+.autherr.info{color:var(--mint-700)}
+
+/* SÉLECTEURS VOIE / SÉRIE / SPÉCIALITÉS */
+.specwrap{display:flex;flex-direction:column;font-size:12px;color:var(--ink-soft);gap:2px;position:relative}
+.spec summary{list-style:none;cursor:pointer;background:var(--white);border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;min-width:170px;font-weight:500;font-size:16px;color:var(--forest);display:flex;justify-content:space-between;gap:10px}
+.spec summary::-webkit-details-marker{display:none}
+.spec summary::after{content:"▾";color:var(--ink-soft)}
+.spec summary:hover,.spec[open] summary{border-color:var(--mint-500)}
+.specpanel{position:absolute;top:100%;right:0;margin-top:6px;z-index:20;background:var(--white);border:1.5px solid var(--line);border-radius:16px;padding:8px;width:min(340px,86vw);max-height:320px;overflow-y:auto;box-shadow:0 24px 50px -24px rgba(0,0,0,.5)}
+.specpanel .grp{font-size:12px;font-weight:700;color:var(--mint-700);padding:8px 8px 2px;letter-spacing:.02em}
+.specpanel label{flex-direction:row;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:10px;font-size:14px;color:var(--forest);cursor:pointer}
+.specpanel label:hover{background:var(--mint-100)}
+.specpanel label.dis{opacity:.45;cursor:not-allowed}
+.specpanel input{margin-top:3px;accent-color:var(--mint-500)}
+
+/* RESPONSIVE */
+@media(max-width:980px){
+  .wrap{grid-template-columns:1fr}
+  .hero h1{max-width:20ch}
+}
+@media(max-width:620px){
+  .specpanel{right:auto;left:0}
+  .app{grid-template-columns:1fr;height:80vh}
+  .side{border-right:none;border-bottom:1.5px solid var(--line);flex-direction:row;align-items:center;padding:10px}
+  .history{flex-direction:row;flex:1}
+  .history button{max-width:140px}
+  .subjects{grid-template-columns:repeat(2,1fr)}
+  .msg{max-width:94%}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+
+</head>
+<body>
+
+<header class="nav">
+  <div class="brand">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect width="48" height="48" rx="14" style="fill:var(--logo-bg)"/>
+      <path d="M10 28c5-8 9 8 14 0s9 8 14 0" fill="none" style="stroke:var(--mint-300)" stroke-width="4" stroke-linecap="round"/>
+      <path d="M10 19c5-8 9 8 14 0s9 8 14 0" fill="none" style="stroke:var(--mint-500)" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    FlowAI
+  </div>
+  <div class="selects">
+    <label>Programme
+      <select id="programme">
+        <option>Programme gabonais</option>
+        <option>Programme français</option>
+      </select>
+    </label>
+    <label>Niveau
+      <select id="niveau">
+        <option>CM1</option><option>CM2</option><option>6ème</option><option>5ème</option>
+        <option>4ème</option><option>3ème</option><option>Seconde</option>
+        <option>Première</option><option>Terminale</option>
+      </select>
+    </label>
+    <label id="voieWrap" hidden>Voie
+      <select id="voie"></select>
+    </label>
+    <label id="serieWrap" hidden><span id="serieLabel">Série</span>
+      <select id="serie"></select>
+    </label>
+    <div class="specwrap" id="specWrap" hidden>
+      <span id="specLabel">Spécialités</span>
+      <details class="spec" id="specDetails">
+        <summary id="specSummary">Choisir</summary>
+        <div class="specpanel" id="specPanel"></div>
+      </details>
+    </div>
+    <button class="gear" id="gearBtn" type="button" aria-label="Paramètres" title="Paramètres">
+      <svg viewBox="0 0 24 24"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>Bloqué sur un exercice ? Demande à FlowAI.</h1>
+    <p class="lead">Choisis ta matière, pose ta question, et reçois une explication claire, adaptée à ton programme et à ta classe.</p>
+
+    <p class="subjects-title" id="subjects-label">Choisis une matière</p>
+    <div class="subjects" role="group" aria-labelledby="subjects-label" id="subjects"></div>
+  </section>
+
+  <section class="app" aria-label="Discussion avec FlowAI">
+    <aside class="side">
+      <button class="new-chat" id="newBtn" type="button">+ Nouvelle discussion</button>
+      <nav class="history" id="history" aria-label="Historique"></nav>
+    </aside>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="dot"></span> Assistant FlowAI
+        <span class="ctx" id="ctx">Toutes matières</span>
+      </div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="chips" id="chips"></div>
+      <div class="composer">
+        <p class="note" id="note" role="status"></p>
+        <div class="previews" id="previews"></div>
+        <div class="box">
+          <button class="attach" id="attachBtn" type="button" aria-label="Joindre une photo ou un fichier" title="Joindre une photo, un PDF, un document Word ou un fichier texte">
+            <svg viewBox="0 0 24 24"><path d="M21 11l-8.5 8.5a5 5 0 01-7-7L14 4a3.3 3.3 0 014.7 4.7L10.2 17.2a1.7 1.7 0 01-2.4-2.4L15 7.5"/></svg>
+          </button>
+          <input type="file" id="fileInput" accept="image/*,.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,.md,.csv,text/plain" multiple hidden>
+          <textarea id="question" rows="1" placeholder="Écris ta question ou joins une photo d’exercice…" aria-label="Ta question"></textarea>
+          <button class="send" id="sendBtn" type="button" aria-label="Envoyer">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<dialog id="settings" aria-label="Paramètres">
+  <div class="dlg">
+    <div class="dlg-head"><h2>Paramètres</h2><button class="x" id="closeSettings" type="button" aria-label="Fermer">×</button></div>
+    <section class="sec" id="acct" hidden>
+      <div class="acct">
+        <div class="avatar" id="acctAvatar"></div>
+        <div class="who"><b id="acctName"></b><small id="acctMail"></small></div>
+        <button class="logout" id="logoutBtn" type="button">Déconnexion</button>
+      </div>
+    </section>
+    <section class="sec">
+      <h3>Thème</h3>
+      <div class="seg" id="themeSeg">
+        <button type="button" data-pref="theme" data-value="light" aria-pressed="false">Clair</button>
+        <button type="button" data-pref="theme" data-value="dark" aria-pressed="false">Sombre</button>
+        <button type="button" data-pref="theme" data-value="auto" aria-pressed="false">Auto</button>
+      </div>
+    </section>
+    <section class="sec">
+      <h3>Couleur</h3>
+      <div class="swatches" id="swatches">
+        <button type="button" class="sw" data-pref="accent" data-value="menthe" aria-pressed="false" aria-label="Menthe"><i style="background:hsl(155 52% 51%)"></i>Menthe</button>
+        <button type="button" class="sw" data-pref="accent" data-value="ocean" aria-pressed="false" aria-label="Océan"><i style="background:hsl(205 52% 51%)"></i>Océan</button>
+        <button type="button" class="sw" data-pref="accent" data-value="lavande" aria-pressed="false" aria-label="Lavande"><i style="background:hsl(265 52% 51%)"></i>Lavande</button>
+        <button type="button" class="sw" data-pref="accent" data-value="rose" aria-pressed="false" aria-label="Rose"><i style="background:hsl(335 52% 51%)"></i>Rose</button>
+        <button type="button" class="sw" data-pref="accent" data-value="corail" aria-pressed="false" aria-label="Corail"><i style="background:hsl(15 52% 51%)"></i>Corail</button>
+      </div>
+    </section>
+    <section class="sec">
+      <h3>Comment FlowAI t’explique</h3>
+      <div class="styles" id="styles">
+        <button type="button" class="st" data-pref="style" data-value="equilibre" aria-pressed="false"><b>Équilibré</b><span>Des explications claires, ni trop courtes ni trop longues.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="simple" aria-pressed="false"><b>Court et simple</b><span>L’essentiel en quelques phrases.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="pas_a_pas" aria-pressed="false"><b>Pas à pas</b><span>Chaque étape détaillée, comme en cours.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="exemples" aria-pressed="false"><b>Avec des exemples</b><span>Beaucoup d’exemples concrets.</span></button>
+        <button type="button" class="st" data-pref="style" data-value="guide" aria-pressed="false"><b>Me guider</b><span>Des indices et des questions, sans donner tout de suite la réponse.</span></button>
+      </div>
+    </section>
+  </div>
+</dialog>
+
+<div class="gate" id="gate" hidden>
+  <div class="gcard">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true" width="40" height="40">
+        <rect width="48" height="48" rx="14" style="fill:var(--logo-bg)"/>
+        <path d="M10 28c5-8 9 8 14 0s9 8 14 0" fill="none" style="stroke:var(--mint-300)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M10 19c5-8 9 8 14 0s9 8 14 0" fill="none" style="stroke:var(--mint-500)" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      FlowAI
+    </div>
+    <h2>Bienvenue !</h2>
+    <p class="sub">Connecte-toi pour retrouver tes discussions.</p>
+
+    <button class="social" id="googleBtn" type="button">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+      Continuer avec Google
+    </button>
+    <button class="social" id="appleBtn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+      Continuer avec Apple
+    </button>
+
+    <div class="or">ou avec une adresse e-mail</div>
+    <form id="emailForm">
+      <input type="email" id="email" placeholder="Adresse e-mail" autocomplete="email" required>
+      <input type="password" id="password" placeholder="Mot de passe (6 caractères minimum)" autocomplete="current-password" minlength="6" required>
+      <button class="primary" id="emailSubmit" type="submit">Se connecter</button>
+    </form>
+    <div class="links">
+      <button type="button" id="toggleMode">Créer un compte</button>
+      <button type="button" id="forgot">Mot de passe oublié ?</button>
+    </div>
+    <p class="autherr" id="authErr" role="alert"></p>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script>
+/* ========== CONFIG FIREBASE (connexion Google / Apple / e-mail) ==========
+   Colle ici le bloc "firebaseConfig" de ta console Firebase.
+   Tant que apiKey commence par "VOTRE", la connexion est désactivée et le site reste ouvert. */
+const FIREBASE_CONFIG = {
+  apiKey: "VOTRE_API_KEY",
+  authDomain: "VOTRE_PROJET.firebaseapp.com",
+  projectId: "VOTRE_PROJET",
+  appId: "VOTRE_APP_ID"
+};
+const AUTH_ENABLED = typeof firebase !== "undefined" && !FIREBASE_CONFIG.apiKey.startsWith("VOTRE");
+
+/* ========== DONNÉES ========== */
+const SUBJECTS = [
+  {id:"Toutes matières", label:"Toutes", icon:'<path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/>', tips:["Explique-moi une notion de cours","Aide-moi à réviser pour mon devoir"]},
+  {id:"Mathématiques", label:"Maths", icon:'<path d="M18 5H7l6 7-6 7h11"/>', tips:["Comment résoudre une équation du 2nd degré ?","Explique le théorème de Pythagore"]},
+  {id:"Français", label:"Français", icon:'<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19a2 2 0 012-2h13"/>', tips:["Comment faire un commentaire de texte ?","Rappelle-moi l’accord du participe passé"]},
+  {id:"SVT", label:"SVT", icon:'<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14zM5 19c3-4 6-7 10-9"/>', tips:["Explique la photosynthèse","Comment fonctionne le système digestif ?"]},
+  {id:"Physique-Chimie", label:"Physique-Chimie", icon:'<path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3M8 15h8"/>', tips:["C’est quoi une réaction chimique ?","Explique la loi d’Ohm"]},
+  {id:"Histoire-Géographie", label:"Histoire-Géo", icon:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>', tips:["Résume l’histoire de l’indépendance du Gabon","Explique les causes de la Première Guerre mondiale"]},
+  {id:"Anglais", label:"Anglais", icon:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/>', tips:["Explique le present perfect","Aide-moi à écrire un petit texte en anglais"]},
+  {id:"Philosophie", label:"Philo", icon:'<path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0012 3z"/>', tips:["Comment structurer une dissertation ?","Explique la notion de liberté"]},
+  {id:"Enseignement scientifique", label:"Ens. scientifique", terminal:true, icon:'<circle cx="12" cy="12" r="1.6"/><ellipse cx="12" cy="12" rx="9" ry="3.8"/><ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(120 12 12)"/>', tips:["Explique le réchauffement climatique","Aide-moi à comprendre l’évolution du vivant"]},
+  {id:"Musique", label:"Musique", prog:"Programme gabonais", icon:'<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>', tips:["Comment lire une partition ?","Explique la différence entre rythme et mélodie"]},
+  {id:"Art dramatique", label:"Art dramatique", prog:"Programme gabonais", icon:'<path d="M4 5h11v7a5.5 5.5 0 01-11 0z"/><path d="M7.5 9h.01M11.5 9h.01M7.5 13c1 1 3 1 4 0"/><path d="M9 5V4h11v7c0 2-1 3.8-2.5 4.7"/>', tips:["Comment analyser une pièce de théâtre ?","Donne-moi des conseils pour jouer sur scène"]},
+  {id:"Arts plastiques", label:"Arts plastiques", prog:"Programme gabonais", icon:'<path d="M12 3a9 9 0 100 18c1.5 0 2-1 1.5-2s0-2 1.500-2h2a3 3 0 003-3c0-6-3.500-11-8-11z"/><circle cx="7.500" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.500" r="1"/>', tips:["Explique les couleurs primaires et secondaires","Comment analyser une œuvre d’art ?"]}
+];
+
+function welcome(){
+  const first = user && user.displayName ? " " + user.displayName.split(" ")[0] : "";
+  return "👋 Bonjour" + first + ", je suis FlowAI. Choisis une matière puis pose-moi ta question : je t’explique pas à pas.";
+}
+
+/* ========== ÉTAT ========== */
+let user = null;
+const storageKey = () => "flowai_conversations_" + (user ? user.uid : "local");
+function loadConversations(){
+  try { return JSON.parse(localStorage.getItem(storageKey())) || []; } catch(e){ return []; }
+}
+let conversations = [];
+let currentId = null;
+let subject = SUBJECTS[0];
+let busy = false;
+
+const $ = id => document.getElementById(id);
+const chat = $("chat"), input = $("question"), sendBtn = $("sendBtn");
+
+function persist(){
+  try { localStorage.setItem(storageKey(), JSON.stringify(conversations)); } catch(e){}
+}
+const current = () => conversations.find(c => c.id === currentId);
+
+/* ========== MATIÈRES ========== */
+function visibleSubjects(){
+  const prog = $("programme").value;
+  const terminal = ["Première","Terminale"].includes($("niveau").value);
+  return SUBJECTS.filter(s => (!s.terminal || terminal) && (!s.prog || s.prog === prog));
+}
+
+function renderSubjects(){
+  $("subjects").innerHTML = "";
+  visibleSubjects().forEach(s => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "subject";
+    b.setAttribute("aria-pressed", s.id === subject.id);
+    b.innerHTML = `<span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">${s.icon}</svg></span>${s.label}`;
+    b.onclick = () => { subject = s; renderSubjects(); renderChips(); $("ctx").textContent = s.id; input.focus(); };
+    $("subjects").appendChild(b);
+  });
+}
+
+function renderChips(){
+  const box = $("chips");
+  box.innerHTML = "";
+  subject.tips.forEach(t => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = t;
+    b.onclick = () => { input.value = t; askAI(); };
+    box.appendChild(b);
+  });
+}
+
+/* ========== CHAT ========== */
+function addMsg(role, text, extra, imgs){
+  const d = document.createElement("div");
+  d.className = "msg " + role + (extra ? " " + extra : "");
+  if (imgs && imgs.length){
+    const row = document.createElement("div");
+    row.className = "thumbs";
+    imgs.forEach(src => { const i = document.createElement("img"); i.src = src; i.alt = "Image jointe"; row.appendChild(i); });
+    d.appendChild(row);
+  }
+  if (text) d.appendChild(document.createTextNode(text));
+
+  // Affiche les expressions LaTeX comme de vraies formules mathématiques.
+  if (text && window.renderMathInElement) {
+    try {
+      renderMathInElement(d, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false }
+        ],
+        throwOnError: false,
+        strict: "ignore",
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      });
+    } catch (error) {
+      console.warn("Rendu mathématique indisponible :", error);
+    }
+  }
+
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+
+function showConversation(){
+  chat.innerHTML = "";
+  const c = current();
+  addMsg("ai", welcome());
+  if (c) c.messages.forEach(m => addMsg(m.role, m.content));
+  renderHistory();
+}
+
+function renderHistory(){
+  const h = $("history");
+  h.innerHTML = "";
+  if (!conversations.length){
+    h.innerHTML = '<p class="empty">Aucune discussion pour l’instant.</p>';
+    return;
+  }
+  conversations.slice().reverse().forEach(c => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = c.title;
+    b.title = c.title;
+    if (c.id === currentId) b.className = "on";
+    b.onclick = () => { currentId = c.id; showConversation(); };
+    h.appendChild(b);
+  });
+}
+
+function newConversation(){
+  currentId = null;
+  showConversation();
+  input.focus();
+}
+
+/* ========== PIÈCES JOINTES ========== */
+const MAX_IMAGES = 3;
+const MAX_TOTAL = 3200000; /* ~3,2 Mo en base64 : sous la limite de 4 Mo de Groq */
+let attachments = [];      /* {type:"image", name, dataUrl} ou {type:"text", name, text} */
+let noteTimer;
+
+function notice(msg){
+  $("note").textContent = msg;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => { $("note").textContent = ""; }, 6000);
+}
+
+function readFile(file, asText){
+  return new Promise((ok, ko) => {
+    const r = new FileReader();
+    r.onload = () => ok(r.result);
+    r.onerror = ko;
+    asText ? r.readAsText(file) : r.readAsDataURL(file);
+  });
+}
+
+async function compressImage(file){
+  const url = await readFile(file, false);
+  const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = url; });
+  const scale = Math.min(1, 1280 / Math.max(img.width, img.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.width * scale);
+  c.height = Math.round(img.height * scale);
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.8);
+}
+
+async function addDocx(f){
+  if (!window.mammoth){ notice("Le lecteur Word n’a pas pu se charger. Vérifie ta connexion et recharge la page."); return; }
+  const result = await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() });
+  const text = (result.value || "").trim();
+  if (!text){ notice("Ce document Word ne contient pas de texte lisible (images seulement ?). Envoie-le en photo ou en PDF."); return; }
+  attachments.push({ type:"text", name:f.name, text:text.slice(0, 6000) });
+  if (text.length > 6000) notice("Document long : seul le début est envoyé.");
+}
+
+async function addPdf(f){
+  if (!window.pdfjsLib){ notice("Le lecteur PDF n’a pas pu se charger. Vérifie ta connexion et recharge la page."); return; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+  const pages = Math.min(pdf.numPages, 15);
+
+  /* 1. On essaie d'abord de lire le texte du PDF */
+  let text = "";
+  for (let p = 1; p <= pages; p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    text += "\n--- Page " + p + " ---\n" + content.items.map(i => i.str).join(" ");
+  }
+  const clean = text.replace(/--- Page \d+ ---/g, "").replace(/\s/g, "");
+  if (clean.length > 50){
+    attachments.push({ type:"text", name:f.name, text:text.trim().slice(0, 6000) });
+    if (pdf.numPages > pages || text.length > 6000) notice("PDF long : seul le début du document est envoyé.");
+    return;
+  }
+
+  /* 2. PDF scanné (sans texte) : on envoie les premières pages comme images */
+  const used = attachments.filter(a => a.type === "image");
+  const room = MAX_IMAGES - used.length;
+  if (room <= 0){ notice("Maximum " + MAX_IMAGES + " images par message."); return; }
+  let total = used.reduce((n, a) => n + a.dataUrl.length, 0);
+  const count = Math.min(room, pdf.numPages, 3);
+  for (let p = 1; p <= count; p++){
+    const page = await pdf.getPage(p);
+    const base = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale: 1280 / Math.max(base.width, base.height) });
+    const c = document.createElement("canvas");
+    c.width = Math.round(vp.width);
+    c.height = Math.round(vp.height);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    const dataUrl = c.toDataURL("image/jpeg", 0.8);
+    total += dataUrl.length;
+    if (total > MAX_TOTAL){ notice("Pages trop lourdes : seules les premières ont été jointes."); break; }
+    attachments.push({ type:"image", name:f.name + " (p." + p + ")", dataUrl });
+  }
+  notice(pdf.numPages > count
+    ? "PDF scanné : les " + count + " premières pages sont envoyées comme images."
+    : "PDF scanné : les pages sont envoyées comme images.");
+}
+
+async function addFiles(files){
+  for (const f of files){
+    try {
+      const imgs = attachments.filter(a => a.type === "image");
+      if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)){
+        await addPdf(f);
+      } else if (/\.docx$/i.test(f.name)){
+        await addDocx(f);
+      } else if (/\.doc$/i.test(f.name)){
+        notice("Les anciens fichiers .doc ne sont pas lus. Enregistre-le en .docx ou en PDF, puis renvoie-le.");
+      } else if (f.type.startsWith("image/")){
+        if (imgs.length >= MAX_IMAGES){ notice("Maximum " + MAX_IMAGES + " images par message."); continue; }
+        const dataUrl = await compressImage(f);
+        const total = imgs.reduce((n, a) => n + a.dataUrl.length, 0) + dataUrl.length;
+        if (total > MAX_TOTAL){ notice("Images trop lourdes : envoie-en moins à la fois."); continue; }
+        attachments.push({ type:"image", name:f.name, dataUrl });
+      } else if (/\.(txt|md|csv)$/i.test(f.name) || f.type.startsWith("text/")){
+        const text = (await readFile(f, true)).slice(0, 6000);
+        attachments.push({ type:"text", name:f.name, text });
+      } else {
+        notice("« " + f.name + " » n’est pas pris en charge. Envoie une image, un PDF, un document Word (.docx) ou un fichier texte.");
+      }
+    } catch(e){
+      notice("Impossible de lire « " + f.name + " ».");
+    }
+  }
+  renderPreviews();
+}
+
+function renderPreviews(){
+  const box = $("previews");
+  box.innerHTML = "";
+  attachments.forEach((a, i) => {
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    if (a.type === "image"){
+      const im = document.createElement("img");
+      im.src = a.dataUrl; im.alt = "";
+      chip.appendChild(im);
+    } else {
+      const fi = document.createElement("div");
+      fi.className = "fi";
+      fi.textContent = "📄";
+      chip.appendChild(fi);
+    }
+    const nm = document.createElement("span");
+    nm.className = "nm"; nm.textContent = a.name;
+    const x = document.createElement("button");
+    x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "Retirer " + a.name);
+    x.onclick = () => { attachments.splice(i, 1); renderPreviews(); };
+    chip.append(nm, x);
+    box.appendChild(chip);
+  });
+}
+
+/* ========== ENVOI ========== */
+async function askAI(){
+  let question = input.value.trim();
+  if ((!question && !attachments.length) || busy) return;
+  if (!question) question = "Peux-tu m’aider avec ce document ?";
+
+  busy = true;
+  sendBtn.disabled = true;
+  input.value = "";
+  input.style.height = "auto";
+
+  const sent = attachments;
+  attachments = [];
+  renderPreviews();
+  const images = sent.filter(a => a.type === "image").map(a => a.dataUrl);
+  const texts = sent.filter(a => a.type === "text");
+  const fullQuestion = question + texts.map(t => "\n\n[Fichier : " + t.name + "]\n" + t.text).join("");
+  const shown = question + (texts.length ? "\n📄 " + texts.map(t => t.name).join(", ") : "");
+  const saved = shown + (images.length ? "\n📷 " + images.length + " image(s) jointe(s)" : "");
+
+  let c = current();
+  if (!c){
+    c = { id: Date.now(), title: question.length > 28 ? question.slice(0,28) + "…" : question, messages: [] };
+    conversations.push(c);
+    currentId = c.id;
+  }
+
+  addMsg("user", shown, "", images);
+  const loading = addMsg("ai", "FlowAI réfléchit", "typing");
+
+  const payload = {
+    question: fullQuestion,
+    images,
+    niveau: $("niveau").value,
+    programme: $("programme").value,
+    voie: $("voieWrap").hidden ? "" : $("voie").value,
+    serie: $("serieWrap").hidden ? "" : $("serie").value,
+    specialites: $("specWrap").hidden ? [] : specs,
+    matiere: subject.id,
+    style: prefs.style,
+    historique: c.messages.slice(-6)
+  };
+
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (user) headers.Authorization = "Bearer " + await user.getIdToken();
+    const res = await fetch("/.netlify/functions/ask", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
+    });
+    if (res.status === 413) throw new Error("TROP_LOURD");
+    if (res.status === 401) throw new Error("SESSION");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+    const answer = data?.choices?.[0]?.message?.content || data?.answer;
+    if (!answer) throw new Error("Réponse vide");
+
+    loading.classList.remove("typing");
+    loading.textContent = answer;
+    c.messages.push({ role: "user", content: saved }, { role: "ai", content: answer });
+    persist();
+    renderHistory();
+  } catch(err){
+    console.error(err);
+    loading.classList.remove("typing");
+
+    // Ne perds pas les pièces jointes si l'envoi échoue.
+    attachments = sent.concat(attachments);
+    renderPreviews();
+
+    const message = err.message === "SESSION"
+      ? "Ta session a expiré. Reconnecte-toi pour continuer."
+      : err.message === "TROP_LOURD"
+      ? "Les fichiers joints sont trop lourds. Envoie moins d’images ou des photos plus petites."
+      : err instanceof TypeError
+      ? "Impossible de joindre le serveur. Vérifie ta connexion internet puis réessaie."
+      : (err.message || "Une erreur inattendue est survenue. Réessaie.");
+    loading.textContent = message;
+    if (!c.messages.length){ conversations = conversations.filter(x => x !== c); currentId = null; renderHistory(); }
+  } finally {
+    busy = false;
+    sendBtn.disabled = false;
+    chat.scrollTop = chat.scrollHeight;
+    input.focus();
+  }
+}
+
+/* ========== ÉVÉNEMENTS ========== */
+$("newBtn").onclick = newConversation;
+sendBtn.onclick = askAI;
+$("attachBtn").onclick = () => $("fileInput").click();
+$("fileInput").addEventListener("change", e => { addFiles(Array.from(e.target.files)); e.target.value = ""; });
+input.addEventListener("paste", e => {
+  const files = Array.from(e.clipboardData?.files || []);
+  if (files.length){ e.preventDefault(); addFiles(files); }
+});
+const appBox = document.querySelector(".app");
+["dragenter","dragover"].forEach(ev => appBox.addEventListener(ev, e => { e.preventDefault(); appBox.classList.add("drag"); }));
+["dragleave","drop"].forEach(ev => appBox.addEventListener(ev, e => { e.preventDefault(); appBox.classList.remove("drag"); }));
+appBox.addEventListener("drop", e => addFiles(Array.from(e.dataTransfer.files)));
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); askAI(); }
+});
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 140) + "px";
+});
+
+/* ========== DÉMARRAGE ========== */
+/* ========== VOIE / SÉRIE / SPÉCIALITÉS ========== */
+const VOIES = {
+  "Programme français": ["Voie générale","Voie technologique"],
+  "Programme gabonais": ["Voie générale","Voie technique et professionnelle"]
+};
+const FR_TECHNO = [
+  "STMG – Management et gestion","STI2D – Industrie et développement durable","STL – Laboratoire",
+  "ST2S – Santé et social","STD2A – Design et arts appliqués","STHR – Hôtellerie-restauration",
+  "S2TMD – Théâtre, musique et danse","STAV – Agronomie et vivant"
+];
+const GA_GEN = [
+  "A1 – Lettres, philosophie et maths","A2 – Lettres et langues","B – Sciences économiques",
+  "C – Maths et sciences physiques","D – Sciences de la vie et de la Terre"
+];
+const GA_TECH = [
+  ["Industriel", ["E – Mathématiques et techniques","F1 – Construction mécanique","F2 – Électronique","F3 – Électrotechnique","F4 – Génie civil"]],
+  ["Tertiaire", ["G1 – Techniques administratives","G2 – Techniques quantitatives de gestion","G3 – Techniques commerciales"]],
+  ["Professionnel", ["BT – Menuiserie-ébénisterie","BT – Structure bois"]],
+  ["Autre", ["Autre filière (je la précise dans ma question)"]]
+];
+const FR_GEN_SPECS = [
+  ["Arts", ["Arts plastiques","Cinéma-audiovisuel","Danse","Histoire des arts","Musique","Théâtre"].map(n => ["Arts : " + n, n])],
+  ["Sciences", ["Mathématiques","Physique-chimie","Sciences de la vie et de la Terre (SVT)","Sciences de l’ingénieur","Numérique et sciences informatiques (NSI)","Biologie-écologie (lycées agricoles)"].map(n => [n, n])],
+  ["Lettres, langues et sciences humaines", ["Humanités, littérature et philosophie (HLP)","Langues, littératures et cultures étrangères et régionales (LLCER)","Littérature, langues et cultures de l’Antiquité (latin / grec)","Histoire-géographie, géopolitique et sciences politiques (HGGSP)","Sciences économiques et sociales (SES)"].map(n => [n, n])],
+  ["Sport", [["Éducation physique, pratiques et culture sportives (EPPCS)","Éducation physique, pratiques et culture sportives (EPPCS)"]]]
+];
+const MGSN = "Management, sciences de gestion et numérique";
+const IID = "Ingénierie, innovation et développement durable";
+const TECHNO_SPECS = {
+  STMG: {
+    "Première": ["Sciences de gestion et numérique","Management","Droit et économie"],
+    "Terminale": [MGSN + " – Gestion et finance", MGSN + " – Mercatique (marketing)", MGSN + " – Ressources humaines et communication", MGSN + " – Systèmes d’information de gestion","Droit et économie"]
+  },
+  STI2D: {
+    "Première": ["Innovation technologique","Ingénierie et développement durable","Physique-chimie et mathématiques"],
+    "Terminale": ["Physique-chimie et mathématiques", IID + " – Architecture et construction", IID + " – Énergies et environnement", IID + " – Innovation technologique et éco-conception", IID + " – Systèmes d’information et numérique"]
+  },
+  STL: {
+    "Première": ["Physique-chimie et mathématiques","Biochimie-biologie","Biotechnologies","Sciences physiques et chimiques en laboratoire"],
+    "Terminale": ["Physique-chimie et mathématiques","Biochimie, biologie et biotechnologies","Sciences physiques et chimiques en laboratoire"]
+  },
+  ST2S: {
+    "Première": ["Chimie, biologie et physiopathologie humaines","Sciences et techniques sanitaires et sociales"],
+    "Terminale": ["Chimie, biologie et physiopathologie humaines","Sciences et techniques sanitaires et sociales"]
+  },
+  STD2A: {
+    "Première": ["Physique-chimie","Outils et langages numériques","Design et métiers d’art"],
+    "Terminale": ["Analyse et méthodes en design","Conception et création en design et métiers d’art"]
+  },
+  STHR: {
+    "Première": ["Enseignement scientifique alimentation-environnement","Sciences et technologies culinaires et des services","Économie-gestion hôtelière"],
+    "Terminale": ["Enseignement scientifique alimentation-environnement","Sciences et technologies culinaires et des services","Économie-gestion hôtelière"]
+  },
+  S2TMD: {
+    "Première": ["Économie, droit et environnement du spectacle vivant","Culture et sciences chorégraphiques, musicales ou théâtrales","Pratique chorégraphique, musicale ou théâtrale"],
+    "Terminale": ["Économie, droit et environnement du spectacle vivant","Culture et sciences chorégraphiques, musicales ou théâtrales","Pratique chorégraphique, musicale ou théâtrale"]
+  }
+};
+let specs = [];
+
+function fillSelect(sel, items){
+  const keep = sel.value;
+  sel.innerHTML = "";
+  const add = (parent, text) => { const o = document.createElement("option"); o.value = o.textContent = text; parent.appendChild(o); };
+  items.forEach(it => {
+    if (Array.isArray(it)){
+      const g = document.createElement("optgroup"); g.label = it[0];
+      it[1].forEach(t => add(g, t)); sel.appendChild(g);
+    } else add(sel, it);
+  });
+  if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
+}
+
+function renderSpecs(kind, groups, max){
+  const panel = $("specPanel");
+  panel.innerHTML = "";
+  const all = groups.flatMap(g => g[1].map(i => i[0]));
+  specs = specs.filter(v => all.includes(v)).slice(0, kind === "multi" ? max : 1);
+  const mk = (value, text) => {
+    const lab = document.createElement("label");
+    const inp = document.createElement("input");
+    inp.type = kind === "multi" ? "checkbox" : "radio";
+    inp.name = "spec"; inp.value = value;
+    inp.checked = kind === "multi" ? specs.includes(value) : (specs[0] || "") === value;
+    inp.onchange = () => {
+      specs = kind === "multi" ? [...panel.querySelectorAll("input:checked")].map(i => i.value) : (value ? [value] : []);
+      syncSpecs(kind, max);
+      saveProfile();
+    };
+    lab.append(inp, document.createTextNode(text));
+    return lab;
+  };
+  if (kind === "single") panel.appendChild(mk("", "Toutes (non précisé)"));
+  groups.forEach(([g, items]) => {
+    if (g){ const h = document.createElement("div"); h.className = "grp"; h.textContent = g; panel.appendChild(h); }
+    items.forEach(([v, l]) => panel.appendChild(mk(v, l)));
+  });
+  syncSpecs(kind, max);
+}
+
+function syncSpecs(kind, max){
+  if (kind === "multi") {
+    $("specPanel").querySelectorAll("input").forEach(b => {
+      const off = !b.checked && specs.length >= max;
+      b.disabled = off;
+      b.parentElement.classList.toggle("dis", off);
+    });
+    $("specSummary").textContent = specs.length ? specs.length + "/" + max + " choisies" : "Choisir (max " + max + ")";
+  } else {
+    const v = specs[0];
+    $("specSummary").textContent = v ? (v.length > 26 ? v.slice(0, 26) + "…" : v) : "Toutes";
+  }
+}
+
+function saveProfile(){
+  try {
+    localStorage.setItem("flowai_profile", JSON.stringify({
+      programme: $("programme").value, niveau: $("niveau").value,
+      voie: $("voie").value, serie: $("serie").value, specs
+    }));
+  } catch(e){}
+}
+
+function refreshContext(){
+  const prog = $("programme").value, niv = $("niveau").value;
+  const terminal = niv === "Première" || niv === "Terminale";
+  const fr = prog === "Programme français";
+
+  $("voieWrap").hidden = !terminal;
+  if (terminal) fillSelect($("voie"), VOIES[prog]);
+  const gen = terminal && $("voie").value === "Voie générale";
+
+  // Série (voie technologique FR, séries générales GA, filières techniques GA)
+  const showSerie = terminal && !(fr && gen);
+  $("serieWrap").hidden = !showSerie;
+  if (showSerie){
+    $("serieLabel").textContent = !fr && !gen ? "Filière" : "Série";
+    fillSelect($("serie"), fr ? FR_TECHNO : (gen ? GA_GEN : GA_TECH));
+  }
+
+  // Spécialités (voie générale française : à choisir ; voie technologique : selon la série)
+  const serieId = showSerie && fr ? $("serie").value.split(" ")[0] : "";
+  const list = fr && !gen && terminal && TECHNO_SPECS[serieId] ? TECHNO_SPECS[serieId][niv] : null;
+  if (fr && gen){
+    $("specWrap").hidden = false;
+    $("specLabel").textContent = "Spécialités";
+    renderSpecs("multi", FR_GEN_SPECS, niv === "Première" ? 3 : 2);
+  } else if (list){
+    $("specWrap").hidden = false;
+    $("specLabel").textContent = "Enseignement de spécialité";
+    renderSpecs("single", [[null, list.map(x => [x, x])]], 1);
+  } else {
+    $("specWrap").hidden = true;
+    specs = [];
+  }
+  $("specDetails").open = false;
+
+  // Matières visibles selon le programme et le niveau
+  if (!visibleSubjects().some(x => x.id === subject.id)) subject = SUBJECTS[0];
+  $("ctx").textContent = subject.id;
+  renderSubjects();
+  renderChips();
+  saveProfile();
+}
+
+function restoreProfile(){
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem("flowai_profile")) || {}; } catch(e){}
+  const set = (id, v) => { const el = $(id); if (v && [...el.options].some(o => o.value === v)) el.value = v; };
+  set("programme", p.programme); set("niveau", p.niveau);
+  refreshContext(); set("voie", p.voie);
+  refreshContext(); set("serie", p.serie);
+  specs = Array.isArray(p.specs) ? p.specs : [];
+  refreshContext();
+}
+
+["programme","niveau","voie","serie"].forEach(id => $(id).addEventListener("change", refreshContext));
+document.addEventListener("click", e => { if (!$("specWrap").contains(e.target)) $("specDetails").open = false; });
+
+/* ========== PRÉFÉRENCES (thème, couleur, style de réponse) ========== */
+const HUES = { menthe:155, ocean:205, lavande:265, rose:335, corail:15 };
+const ACCENTS = [["menthe","Menthe"],["ocean","Océan"],["lavande","Lavande"],["rose","Rose"],["corail","Corail"]];
+const THEMES = [["light","Clair"],["dark","Sombre"],["auto","Auto"]];
+const STYLES = [
+  ["equilibre","Équilibré","Des explications claires, ni trop courtes ni trop longues."],
+  ["simple","Court et simple","L’essentiel en quelques phrases."],
+  ["pas_a_pas","Pas à pas","Chaque étape détaillée, comme en cours."],
+  ["exemples","Avec des exemples","Beaucoup d’exemples concrets."],
+  ["guide","Me guider","Des indices et des questions, sans donner tout de suite la réponse."]
+];
+let prefs = { theme:"auto", accent:"menthe", style:"equilibre" };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem("flowai_prefs")) || {}); } catch(e){}
+const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+
+function applyPrefs(){
+  const t = prefs.theme === "auto" ? (darkQuery.matches ? "dark" : "light") : prefs.theme;
+  document.documentElement.dataset.theme = t;
+  document.documentElement.style.setProperty("--h", HUES[prefs.accent] || 155);
+  try { localStorage.setItem("flowai_prefs", JSON.stringify(prefs)); } catch(e){}
+  renderSettings();
+}
+darkQuery.addEventListener("change", () => { if (prefs.theme === "auto") applyPrefs(); });
+
+function renderSettings(){
+  // Les options existent directement dans le HTML : elles restent visibles
+  // même si le navigateur interrompt ou retarde l'initialisation JavaScript.
+  document.querySelectorAll("#settings [data-pref]").forEach(button => {
+    const key = button.dataset.pref;
+    button.setAttribute("aria-pressed", String(prefs[key] === button.dataset.value));
+  });
+}
+$("settings").addEventListener("click", e => {
+  const button = e.target.closest("[data-pref]");
+  if (!button || !$("settings").contains(button)) return;
+  const key = button.dataset.pref;
+  if (!["theme", "accent", "style"].includes(key)) return;
+  prefs[key] = button.dataset.value;
+  applyPrefs();
+});
+// Ouvre les paramètres après avoir reconstruit les options.
+ // Cela évite une fenêtre vide si le navigateur a interrompu le rendu initial.
+$("gearBtn").onclick = () => {
+  const dialog = $("settings");
+  renderSettings();
+  if (typeof dialog.showModal === "function") {
+    if (!dialog.open) dialog.showModal();
+  } else {
+    // Repli pour les navigateurs qui ne prennent pas en charge <dialog>.
+    dialog.setAttribute("open", "");
+  }
+};
+$("closeSettings").onclick = () => {
+  const dialog = $("settings");
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
+};
+$("settings").addEventListener("click", e => {
+  if (e.target === $("settings")) {
+    const dialog = $("settings");
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  }
+});
+
+/* ========== CONNEXION (Google, Apple, e-mail) ========== */
+const AUTH_MSG = {
+  "auth/invalid-credential":"E-mail ou mot de passe incorrect.",
+  "auth/wrong-password":"E-mail ou mot de passe incorrect.",
+  "auth/user-not-found":"E-mail ou mot de passe incorrect.",
+  "auth/invalid-email":"Adresse e-mail invalide.",
+  "auth/email-already-in-use":"Cette adresse e-mail a déjà un compte. Connecte-toi.",
+  "auth/weak-password":"Mot de passe trop court (6 caractères minimum).",
+  "auth/too-many-requests":"Trop d’essais. Réessaie dans quelques minutes.",
+  "auth/network-request-failed":"Pas de connexion internet.",
+  "auth/unauthorized-domain":"Ce site n’est pas autorisé dans Firebase (Authentication > Settings > Authorized domains).",
+  "auth/operation-not-allowed":"Ce mode de connexion n’est pas activé dans Firebase."
+};
+function authMessage(text, info){ const e = $("authErr"); e.textContent = text || ""; e.classList.toggle("info", !!info); }
+function showAuthError(e){
+  if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return;
+  authMessage(AUTH_MSG[e.code] || "Connexion impossible. Réessaie.");
+}
+
+function applyUser(){
+  conversations = loadConversations();
+  currentId = null;
+  showConversation();
+  $("gate").hidden = !AUTH_ENABLED || !!user;
+  $("gate").classList.remove("pending");
+  $("acct").hidden = !user;
+  if (user){
+    $("acctName").textContent = user.displayName || "Élève";
+    $("acctMail").textContent = user.email || "";
+    const av = $("acctAvatar");
+    av.innerHTML = "";
+    if (user.photoURL){
+      const im = document.createElement("img");
+      im.src = user.photoURL; im.alt = ""; im.referrerPolicy = "no-referrer";
+      im.style.cssText = "width:100%;height:100%;border-radius:50%;object-fit:cover";
+      av.appendChild(im);
+    } else {
+      av.textContent = (user.displayName || user.email || "E").charAt(0).toUpperCase();
+    }
+    $("authErr").textContent = "";
+    $("password").value = "";
+  }
+}
+
+if (AUTH_ENABLED){
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth();
+  auth.useDeviceLanguage();
+  let mode = "login";
+
+  async function social(provider){
+    authMessage("");
+    try { await auth.signInWithPopup(provider); }
+    catch(e){
+      if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")
+        return auth.signInWithRedirect(provider);
+      showAuthError(e);
+    }
+  }
+  $("googleBtn").onclick = () => social(new firebase.auth.GoogleAuthProvider());
+  $("appleBtn").onclick = () => {
+    const p = new firebase.auth.OAuthProvider("apple.com");
+    p.addScope("email"); p.addScope("name");
+    social(p);
+  };
+  $("emailForm").onsubmit = async e => {
+    e.preventDefault();
+    authMessage("");
+    const em = $("email").value.trim(), pw = $("password").value;
+    try {
+      if (mode === "login") await auth.signInWithEmailAndPassword(em, pw);
+      else await auth.createUserWithEmailAndPassword(em, pw);
+    } catch(err){ showAuthError(err); }
+  };
+  $("toggleMode").onclick = () => {
+    mode = mode === "login" ? "signup" : "login";
+    $("emailSubmit").textContent = mode === "login" ? "Se connecter" : "Créer mon compte";
+    $("toggleMode").textContent = mode === "login" ? "Créer un compte" : "J’ai déjà un compte";
+    $("password").autocomplete = mode === "login" ? "current-password" : "new-password";
+    authMessage("");
+  };
+  $("forgot").onclick = async () => {
+    const em = $("email").value.trim();
+    if (!em){ authMessage("Écris d’abord ton adresse e-mail ci-dessus."); return; }
+    try { await auth.sendPasswordResetEmail(em); authMessage("E-mail envoyé : vérifie ta boîte de réception.", true); }
+    catch(err){ showAuthError(err); }
+  };
+  $("logoutBtn").onclick = () => { $("settings").close(); auth.signOut(); };
+
+  $("gate").hidden = false;
+  $("gate").classList.add("pending");
+  auth.onAuthStateChanged(u => { user = u; applyUser(); });
+}
+
+/* ========== DÉMARRAGE ========== */
+restoreProfile();
+applyPrefs();
+if (!AUTH_ENABLED) applyUser();
+</script>
+</body>
+</html>
