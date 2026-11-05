@@ -568,7 +568,7 @@ function newConversation(){
 }
 
 /* ========== PIÈCES JOINTES ========== */
-const MAX_IMAGES = 4;
+const MAX_IMAGES = 3;
 const MAX_TOTAL = 3200000; /* ~3,2 Mo en base64 : sous la limite de 4 Mo de Groq */
 let attachments = [];      /* {type:"image", name, dataUrl} ou {type:"text", name, text} */
 let noteTimer;
@@ -779,11 +779,19 @@ async function askAI(){
   } catch(err){
     console.error(err);
     loading.classList.remove("typing");
-    loading.textContent = err.message === "SESSION"
+
+    // Ne perds pas les pièces jointes si l'envoi échoue.
+    attachments = sent.concat(attachments);
+    renderPreviews();
+
+    const message = err.message === "SESSION"
       ? "Ta session a expiré. Reconnecte-toi pour continuer."
       : err.message === "TROP_LOURD"
       ? "Les fichiers joints sont trop lourds. Envoie moins d’images ou des photos plus petites."
-      : "La connexion avec le serveur a échoué. Vérifie ta connexion internet puis renvoie ta question.";
+      : err instanceof TypeError
+      ? "Impossible de joindre le serveur. Vérifie ta connexion internet puis réessaie."
+      : (err.message || "Une erreur inattendue est survenue. Réessaie.");
+    loading.textContent = message;
     if (!c.messages.length){ conversations = conversations.filter(x => x !== c); currentId = null; renderHistory(); }
   } finally {
     busy = false;
