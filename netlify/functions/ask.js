@@ -152,7 +152,11 @@ Consignes pédagogiques :
 - Pour toutes les expressions mathématiques, écris les formules en LaTeX : utilise \\( ... \\) pour une formule dans une phrase et \\[ ... \\] pour une formule centrée sur sa propre ligne. Exemple : \\( f(x)=x^2+3x-1 \\) et \\[ \\Delta=b^2-4ac \\].
 - N'écris pas les formules importantes uniquement en texte brut (ex. x^2 ou sqrt(x)) : utilise les notations LaTeX afin qu'elles s'affichent proprement.
 - Pour les calculs, garde les étapes sur des lignes séparées et encadre la réponse finale avec \\[ ... \\] lorsque c'est pertinent.
-- Termine par une mini-vérification de compréhension uniquement lorsque cela paraît naturel.`;
+- Termine par une mini-vérification de compréhension uniquement lorsque cela paraît naturel.
+- Utilise **texte** pour mettre les mots importants en gras.
+- Utilise *texte* pour mettre certains mots en italique.
+- Utilise les titres et les listes Markdown si nécessaire.
+- Ne mets pas toute la réponse en gras.`;
 }
 
 exports.handler = async (event) => {
