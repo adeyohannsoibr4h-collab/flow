@@ -1,53 +1,58 @@
-// netlify/functions/ask.js
-// FlowAI : fonction Netlify qui transmet les questions à Groq.
-// La clé GROQ_API_KEY doit rester dans les variables d'environnement Netlify.
+// functions/api/ask.js
+// FlowAI : fonction Cloudflare Pages qui transmet les questions à Groq.
+// Elle répond à l'adresse /api/ask.
+// Les clés se règlent dans Cloudflare (Settings > Variables and Secrets), jamais dans ce fichier :
+//   GROQ_API_KEY      (obligatoire, en "Secret")
+//   FIREBASE_API_KEY  (conseillé : seuls les élèves connectés peuvent poser des questions)
+//   GROQ_MODEL, GROQ_VISION_MODEL (facultatifs)
 
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-// Modèles Groq actuellement adaptés à ces deux usages.
-const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
-const VISION_MODEL = process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b";
+const DEFAULT_MODEL = "openai/gpt-oss-120b";
+const DEFAULT_VISION_MODEL = "qwen/qwen3.8-27b";
 
 const MAX_QUESTION_LENGTH = 9000;
 const MAX_HISTORY_MESSAGES = 6;
 const MAX_HISTORY_MESSAGE_LENGTH = 2000;
 const MAX_IMAGES = 3;
 const MAX_IMAGES_TOTAL_CHARS = 3_500_000;
-const MAX_OUTPUT_TOKENS = 1400;
+const MAX_BODY_CHARS = 5_000_000;
+const MAX_OUTPUT_TOKENS = 2000;
 const REQUEST_TIMEOUT_MS = 25_000;
 
 function json(statusCode, body, extraHeaders = {}) {
-  return {
-    statusCode,
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
-      ...corsHeaders(),
       ...extraHeaders
-    },
-    body: JSON.stringify(body)
-  };
+    }
+  });
 }
 
-function corsHeaders() {
-  const allowedOrigin = process.env.ALLOWED_ORIGIN;
-  return allowedOrigin
-    ? {
-        "Access-Control-Allow-Origin": allowedOrigin,
-        "Vary": "Origin",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+// Vérifie que la demande vient d'un élève connecté (jeton Firebase envoyé par le site).
+async function verifyUser(request, env) {
+  if (!env.FIREBASE_API_KEY) return true; // désactivé tant que la variable n'existe pas
+  const header = request.headers.get("Authorization") || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (!token) return false;
+  try {
+    const r = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${env.FIREBASE_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: token })
       }
-    : {};
-}
-
-function readRequestBody(event) {
-  if (!event.body) return {};
-  const rawBody = event.isBase64Encoded
-    ? Buffer.from(event.body, "base64").toString("utf8")
-    : event.body;
-  return JSON.parse(rawBody);
+    );
+    if (!r.ok) return false;
+    const d = await r.json();
+    return Array.isArray(d.users) && d.users.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 function cleanText(value, fallback, maxLength) {
@@ -76,7 +81,7 @@ function cleanHistory(value) {
     )
     .slice(-MAX_HISTORY_MESSAGES)
     .map((message) => ({
-      // Le frontend historique utilisait "ai". L'API Groq attend "assistant".
+      // Le site utilise le rôle "ai". L'API Groq attend "assistant".
       role: message.role === "user" ? "user" : "assistant",
       content: message.content.trim().slice(0, MAX_HISTORY_MESSAGE_LENGTH)
     }));
@@ -156,28 +161,23 @@ Consignes pédagogiques :
 - Utilise **texte** pour mettre les mots importants en gras.
 - Utilise *texte* pour mettre certains mots en italique.
 - Utilise les titres et les listes Markdown si nécessaire.
-- Ne mets pas toute la réponse en gras.`;
+- Ne mets pas toute la réponse en gras.
+- N'écris jamais ** ni * à l'intérieur d'une formule LaTeX. Pour mettre un résultat en valeur, mets le mot qui l'annonce en gras (par exemple **Résultat :**) puis écris la formule normalement.
+- N'utilise pas de tableaux Markdown : présente les données avec des listes.`;
 }
 
-exports.handler = async (event) => {
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 204,
-      headers: {
-        ...corsHeaders(),
-        "Access-Control-Max-Age": "86400"
-      },
-      body: ""
-    };
+export async function onRequest(context) {
+  const { request, env } = context;
+
+  if (request.method !== "POST") {
+    return json(405, { error: "Méthode non autorisée. Utilise POST." }, { Allow: "POST" });
   }
 
-  if (event.httpMethod !== "POST") {
-    return json(405, { error: "Méthode non autorisée. Utilise POST." }, {
-      Allow: "POST, OPTIONS"
-    });
+  if (!(await verifyUser(request, env))) {
+    return json(401, { error: "Connexion requise" });
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = env.GROQ_API_KEY;
   if (!apiKey) {
     console.error("Configuration manquante : GROQ_API_KEY.");
     return json(500, {
@@ -185,9 +185,19 @@ exports.handler = async (event) => {
     });
   }
 
+  let rawBody;
+  try {
+    rawBody = await request.text();
+  } catch {
+    return json(400, { error: "La requête n'a pas pu être lue." });
+  }
+  if (rawBody.length > MAX_BODY_CHARS) {
+    return json(413, { error: "La requête est trop volumineuse. Réduis la taille des images." });
+  }
+
   let data;
   try {
-    data = readRequestBody(event);
+    data = rawBody ? JSON.parse(rawBody) : {};
   } catch {
     return json(400, { error: "Le contenu de la requête n'est pas un JSON valide." });
   }
@@ -197,7 +207,7 @@ exports.handler = async (event) => {
   }
 
   const question = cleanText(data.question, "", MAX_QUESTION_LENGTH);
-  const context = {
+  const context_ = {
     niveau: cleanText(data.niveau, "non précisé", 40),
     programme: cleanText(data.programme, "non précisé", 40),
     voie: cleanText(data.voie, "non précisée", 60),
@@ -220,7 +230,7 @@ exports.handler = async (event) => {
 
   const historique = cleanHistory(data.historique);
   const messages = [
-    { role: "system", content: getSystemPrompt(context) },
+    { role: "system", content: getSystemPrompt(context_) },
     ...historique,
     {
       role: "user",
@@ -237,7 +247,9 @@ exports.handler = async (event) => {
   ];
 
   const payload = {
-    model: images.length ? VISION_MODEL : MODEL,
+    model: images.length
+      ? env.GROQ_VISION_MODEL || DEFAULT_VISION_MODEL
+      : env.GROQ_MODEL || DEFAULT_MODEL,
     temperature: 0.6,
     max_completion_tokens: MAX_OUTPUT_TOKENS,
     reasoning_effort: "low",
@@ -267,7 +279,7 @@ exports.handler = async (event) => {
     }
 
     if (!response.ok) {
-      console.error("Erreur Groq :", response.status, result);
+      console.error("Erreur Groq :", response.status, JSON.stringify(result));
 
       if (response.status === 401 || response.status === 403) {
         return json(502, {
@@ -276,7 +288,7 @@ exports.handler = async (event) => {
       }
       if (response.status === 404) {
         return json(502, {
-          error: "Le modèle IA demandé est introuvable. Vérifie les variables GROQ_MODEL et GROQ_VISION_MODEL dans Netlify."
+          error: "Le modèle IA demandé est introuvable. Vérifie les variables GROQ_MODEL et GROQ_VISION_MODEL dans Cloudflare."
         });
       }
       if (response.status === 413) {
@@ -301,7 +313,7 @@ exports.handler = async (event) => {
 
     const answer = result?.choices?.[0]?.message?.content;
     if (typeof answer !== "string" || !answer.trim()) {
-      console.error("Réponse Groq inattendue :", result);
+      console.error("Réponse Groq inattendue :", JSON.stringify(result));
       return json(502, { error: "Le service IA a renvoyé une réponse vide. Réessaie." });
     }
 
@@ -315,4 +327,4 @@ exports.handler = async (event) => {
   } finally {
     clearTimeout(timeout);
   }
-};
+}
