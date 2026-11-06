@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FlowAI – L’assistant scolaire qui t’explique</title>
+<title>Flow – L’assistant scolaire qui t’explique</title>
 <script>try{var P=JSON.parse(localStorage.getItem("flowai_prefs"))||{},T=P.theme||"auto";if(T==="auto")T=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=T;document.documentElement.style.setProperty("--h",({menthe:155,ocean:205,lavande:265,rose:335,corail:15})[P.accent]||155)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -346,14 +346,14 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
 <main class="wrap">
 
   <section class="hero">
-    <h1>Bloqué sur un exercice ? Demande à FlowAI.</h1>
+    <h1>Bloqué sur un exercice ? Demande à Flow.</h1>
     <p class="lead">Choisis ta matière, pose ta question, et reçois une explication claire, adaptée à ton programme et à ta classe.</p>
 
     <p class="subjects-title" id="subjects-label">Choisis une matière</p>
     <div class="subjects" role="group" aria-labelledby="subjects-label" id="subjects"></div>
   </section>
 
-  <section class="app" aria-label="Discussion avec FlowAI">
+  <section class="app" aria-label="Discussion avec Flow">
     <aside class="side">
       <button class="new-chat" id="newBtn" type="button">+ Nouvelle discussion</button>
       <nav class="history" id="history" aria-label="Historique"></nav>
@@ -361,7 +361,7 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
 
     <div class="panel">
       <div class="panel-head">
-        <span class="dot"></span> Assistant FlowAI
+        <span class="dot"></span> Assistant Flow
         <span class="ctx" id="ctx">Toutes matières</span>
       </div>
       <div class="chat" id="chat" aria-live="polite"></div>
@@ -414,7 +414,7 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
       </div>
     </section>
     <section class="sec">
-      <h3>Comment FlowAI t’explique</h3>
+      <h3>Comment Flow t’explique</h3>
       <div class="styles" id="styles">
         <button type="button" class="st" data-pref="style" data-value="equilibre" aria-pressed="false"><b>Équilibré</b><span>Des explications claires, ni trop courtes ni trop longues.</span></button>
         <button type="button" class="st" data-pref="style" data-value="simple" aria-pressed="false"><b>Court et simple</b><span>L’essentiel en quelques phrases.</span></button>
@@ -495,45 +495,44 @@ const SUBJECTS = [
 
 function welcome(){
   const first = user && user.displayName ? " " + user.displayName.split(" ")[0] : "";
-  return "👋 Bonjour" + first + ", je suis FlowAI. Choisis une matière puis pose-moi ta question : je t’explique pas à pas.";
+  return "👋 Bonjour" + first + ", je suis Flow. Choisis une matière puis pose-moi ta question : je t’explique pas à pas.";
 }
 
-/* ========== FORMATAGE MARKDOWN ET PROTECTION MATHS ========== */
+/* ========== FORMATAGE MARKDOWN (Gras, Italique et Protection des Maths) ========== */
 function formatMarkdown(text) {
   if (!text) return "";
 
-  // 1. On extrait et évite d'altérer les blocs KaTeX / LaTeX
+  // 1. On isole et protège les formules mathématiques pour qu'elles ne soient pas modifiées
   const mathBlocks = [];
   let placeholderText = text.replace(/(\$\$.*?\$\$|\\\[.*?\\\]|\\\(.*?\\\)|(?:\$[^$\n]+\$))/gs, match => {
     mathBlocks.push(match);
     return `___MATH_BLOCK_${mathBlocks.length - 1}___`;
   });
 
-  // 2. Échappement HTML de sécurité
+  // 2. Échappement HTML de sécurité pour le texte standard
   let formatted = placeholderText
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // 3. Mots importants en **gras** (uniquement les mots ciblés)
+  // 3. Mots importants en **gras** (uniquement sur le texte)
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>');
 
-  // 4. Mots spécifiques en *italique*
+  // 4. Mots spécifiques en *italique* (uniquement sur le texte)
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
   formatted = formatted.replace(/_(.*?)_/g, '<em>$1</em>');
 
-  // 5. Retours à la ligne
+  // 5. Gestion des retours à la ligne
   formatted = formatted.replace(/\n/g, '<br>');
 
-  // 6. On réintroduit les formules mathématiques intactes
+  // 6. On réintroduit les formules mathématiques complètement intactes
   formatted = formatted.replace(/___MATH_BLOCK_(\d+)___/g, (_, index) => {
     return mathBlocks[index];
   });
 
   return formatted;
 }
-
 /* ========== ÉTAT ========== */
 let user = null;
 const storageKey = () => "flowai_conversations_" + (user ? user.uid : "local");
