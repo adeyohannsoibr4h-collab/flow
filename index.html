@@ -470,10 +470,10 @@ dialog::backdrop{background:rgba(5,25,18,.5);backdrop-filter:blur(3px)}
 <script>
 /* ========== CONFIG FIREBASE (connexion Google / Apple / e-mail) ========== */
 const FIREBASE_CONFIG = {
-  apiKey: "VOTRE_API_KEY",
-  authDomain: "VOTRE_PROJET.firebaseapp.com",
-  projectId: "VOTRE_PROJET",
-  appId: "VOTRE_APP_ID"
+  apiKey: "AIzaSyDK7BKDU4x2IlN47scTXIsly_GN3VtyfA0",
+  authDomain: "flowai-45bd5.firebaseapp.com",
+  projectId: "flowai-45bd5",
+  appId: "1:1069456413012:web:6fd0417674635beb4238c1"
 };
 const AUTH_ENABLED = typeof firebase !== "undefined" && !FIREBASE_CONFIG.apiKey.startsWith("VOTRE");
 
@@ -498,22 +498,39 @@ function welcome(){
   return "👋 Bonjour" + first + ", je suis FlowAI. Choisis une matière puis pose-moi ta question : je t’explique pas à pas.";
 }
 
-/* ========== FORMATAGE MARKDOWN (Gras / Italique) ========== */
+/* ========== FORMATAGE MARKDOWN ET PROTECTION MATHS ========== */
 function formatMarkdown(text) {
   if (!text) return "";
-  const escaped = text
+
+  // 1. On extrait et évite d'altérer les blocs KaTeX / LaTeX
+  const mathBlocks = [];
+  let placeholderText = text.replace(/(\$\$.*?\$\$|\\\[.*?\\\]|\\\(.*?\\\)|(?:\$[^$\n]+\$))/gs, match => {
+    mathBlocks.push(match);
+    return `___MATH_BLOCK_${mathBlocks.length - 1}___`;
+  });
+
+  // 2. Échappement HTML de sécurité
+  let formatted = placeholderText
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  
-  // Gras: **texte** ou __texte__
-  let formatted = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // 3. Mots importants en **gras** (uniquement les mots ciblés)
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>');
-  
-  // Italique: *texte* ou _texte_
+
+  // 4. Mots spécifiques en *italique*
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
   formatted = formatted.replace(/_(.*?)_/g, '<em>$1</em>');
-  
+
+  // 5. Retours à la ligne
+  formatted = formatted.replace(/\n/g, '<br>');
+
+  // 6. On réintroduit les formules mathématiques intactes
+  formatted = formatted.replace(/___MATH_BLOCK_(\d+)___/g, (_, index) => {
+    return mathBlocks[index];
+  });
+
   return formatted;
 }
 
