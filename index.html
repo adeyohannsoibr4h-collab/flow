@@ -811,7 +811,7 @@
       try {
         const headers = { "Content-Type": "application/json" };
         if (user) headers.Authorization = "Bearer " + await user.getIdToken();
-        const res = await fetch("/.netlify/functions/ask", {
+        const res = await fetch("/api/ask", {
           method: "POST",
           headers,
           body: JSON.stringify(payload)
